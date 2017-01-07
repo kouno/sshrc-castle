@@ -1,0 +1,31 @@
+#!/bin/bash
+
+info() {
+  local msg=$1
+  echo -e "\033[0;32m${msg}\033[0m"
+}
+
+alias ll="ls -lah"
+
+info "Loading sshrc environment..."
+
+export TMUXDIR=/tmp/kouno.tmux
+export VIMINIT="let \$MYVIMRC='$TMUXDIR/.sshrc.d/.vimrc' | source \$MYVIMRC"
+export SHELL=$(which bash)
+
+if ! [ -d $TMUXDIR ]; then
+  rm -rf $TMUXDIR
+  mkdir -p $TMUXDIR
+fi
+rm -rf $TMUXDIR/.sshrc.d
+cp -r $SSHHOME/.sshrc $SSHHOME/.sshrc.d $TMUXDIR
+
+# TMUX status needs to be executable
+chmod +x $TMUXDIR/.sshrc.d/tmux.status
+
+tmuxrc() {
+  SSHHOME=$TMUXDIR SHELL=$TMUXDIR/bashsshrc /usr/bin/tmux -f $SSHHOME/.sshrc.d/tmux.conf -S $TMUXDIR/tmuxserver $@
+}
+
+info "Loading ec2 prompt..."
+source $SSHHOME/.sshrc.d/ec2_prompt.sh

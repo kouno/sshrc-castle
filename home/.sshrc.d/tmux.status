@@ -1,0 +1,20 @@
+#!/bin/bash
+
+TMP_FILE=/dev/shm/.tmux_status_host_info.kouno
+
+if [ ! -f $TMP_FILE ]; then
+  if curl -s --max-time 1 --connect-timeout 1 http://169.254.169.254/latest/meta-data/instance-id > /dev/null; then
+    ec2_hostname=`curl -s --max-time 1 --connect-timeout 1 http://169.254.169.254/latest/meta-data/public-hostname`
+    if [ -z $ec2_hostname ]; then
+      $ec2_hostname=`curl -s --max-time 1 --connect-timeout 1 http://169.254.169.254/latest/meta-data/public-ipvc4`
+    fi
+    instance_id=`curl -s --max-time 1 --connect-timeout 1 http://169.254.169.254/latest/meta-data/instance-id`
+    security_groups=`curl -s --max-time 1 --connect-timeout 1 http://169.254.169.254/latest/meta-data/security-groups | sed -r 's/(ably-)?(vpc-)?([^-]+).*/\2\3/'`
+    echo "#[fg=brightwhite]${instance_id} #[fg=brightyellow]${ec2_hostname} #[fg=brightwhite]${security_groups}" > $TMP_FILE
+  else
+    echo "#[fg=brightwhite]$(hostname)" > $TMP_FILE
+  fi
+fi
+
+SERVER_INFO=$(cat $TMP_FILE)
+echo "$SERVER_INFO"
